@@ -20,7 +20,8 @@
     function parseAmount(text) {
         if (!text) return 0;
         text = text.trim();
-        const match = text.match(/[\d.,]+/);
+        // Match German format: X.XXX,XX (with optional thousands separators)
+        const match = text.match(/\d+(?:\.\d{3})*,\d{2}/);
         if (!match) return 0;
         
         let numStr = match[0];
