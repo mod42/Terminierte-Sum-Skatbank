@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sum Scheduled Transfers - Skatbank
 // @namespace    http://tampermonkey.net/
-// @version      3.5
+// @version      3.6
 // @description  Sum up all scheduled transfers on Skatbank portal (FIXED number parsing)
 // @author       You
 // @match        https://www.skatbank.de/services_cloud/portal/webcomp/auftraege/terminierte-ueberweisungen*
@@ -11,7 +11,7 @@
 
 (function() {
     'use strict';
-    console.log('🔍 Skatbank Transfer Summe Script v3.5 geladen!');
+    console.log('🔍 Skatbank Transfer Summe Script v3.6 geladen!');
 
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
@@ -19,16 +19,25 @@
 
     function parseAmount(text) {
         if (!text) return 0;
-        text = text.trim();
-        // Match German format: X.XXX,XX (with optional thousands separators)
-        const match = text.match(/\d+(?:\.\d{3})*,\d{2}/);
-        if (!match) return 0;
-        
-        let numStr = match[0];
-        // German format: . = thousands, , = decimal
-        // Simply remove dots and replace comma with dot
-        numStr = numStr.replace(/\./g, '').replace(',', '.');
-        
+        // normalize non-breaking spaces and trim
+        text = text.replace(/\u00A0/g, ' ').trim();
+
+        // Find all substrings that look like German numbers (allow dots, spaces, NBSP as thousands separators)
+        const candidates = text.match(/[\d.\s\u00A0]+,\d{2}/g);
+        let numStr = null;
+
+        if (candidates && candidates.length) {
+            // prefer the longest match (likely includes full thousands separators)
+            numStr = candidates.reduce((a, b) => (a.length >= b.length ? a : b));
+        } else {
+            // fallback: any simple number with decimal comma or point
+            const fallback = text.match(/\d+[.,]\d{2}/g);
+            if (fallback && fallback.length) numStr = fallback.reduce((a, b) => (a.length >= b.length ? a : b));
+            else return 0;
+        }
+
+        // normalize: remove spaces and dots used as thousand separators, replace comma with dot
+        numStr = numStr.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
         const amount = parseFloat(numStr);
         return isNaN(amount) ? 0 : amount;
     }
