@@ -182,18 +182,27 @@
 
         entries.forEach(([date, sum]) => {
             const barWrap = document.createElement('div');
-            barWrap.style.cssText = 'display:flex; flex-direction:column; align-items:center; width:40px;';
+            barWrap.style.cssText = 'display:flex; flex-direction:column; align-items:center; width:40px; position:relative;';
 
             const bar = document.createElement('div');
             const height = Math.round((sum / max) * 160); // max 160px
             bar.style.cssText = `width: 100%; height: ${height}px; background: rgba(255,255,255,0.85); border-radius:4px; transition:opacity .15s;`;
             bar.title = `${date}: ${sum.toFixed(2)} €`;
 
+            // Floating amount tooltip (shows on hover)
+            const tooltip = document.createElement('div');
+            tooltip.textContent = `${sum.toFixed(2)} €`;
+            tooltip.style.cssText = 'position:absolute; bottom:100%; left:50%; transform:translate(-50%, -6px); background: rgba(0,0,0,0.8); color:#fff; padding:4px 6px; border-radius:4px; font-size:11px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .12s ease-in-out;';
+
+            barWrap.addEventListener('mouseenter', () => { tooltip.style.opacity = '1'; });
+            barWrap.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+
             const label = document.createElement('div');
             label.style.cssText = 'font-size:10px; margin-top:6px; text-align:center; word-break:break-word;';
             label.textContent = date === 'N/A' ? 'N/A' : date.replace(/(\d{2})\.(\d{2})\.\d{4}/, '$1.$2');
 
             barWrap.appendChild(bar);
+            barWrap.appendChild(tooltip);
             barWrap.appendChild(label);
             chart.appendChild(barWrap);
         });
