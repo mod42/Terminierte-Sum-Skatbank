@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sum Scheduled Transfers - Skatbank
 // @namespace    http://tampermonkey.net/
-// @version      3.4
+// @version      3.5
 // @description  Sum up all scheduled transfers on Skatbank portal (FIXED number parsing)
 // @author       You
 // @match        https://www.skatbank.de/services_cloud/portal/webcomp/auftraege/terminierte-ueberweisungen*
@@ -11,7 +11,7 @@
 
 (function() {
     'use strict';
-    console.log('🔍 Skatbank Transfer Summe Script v3.4 geladen!');
+    console.log('🔍 Skatbank Transfer Summe Script v3.5 geladen!');
 
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
