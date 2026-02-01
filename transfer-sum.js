@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sum Scheduled Transfers - Skatbank
 // @namespace    http://tampermonkey.net/
-// @version      3.6
+// @version      3.7
 // @description  Sum up all scheduled transfers on Skatbank portal (FIXED number parsing)
 // @author       You
 // @match        https://www.skatbank.de/services_cloud/portal/webcomp/auftraege/terminierte-ueberweisungen*
@@ -11,12 +11,12 @@
 
 (function() {
     'use strict';
-    console.log('🔍 Skatbank Transfer Summe Script v3.6 geladen!');
+    console.log('🔍 Skatbank Transfer Summe Script v3.7 geladen!');
 
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
     let containerInstance = null;
-    const SCRIPT_VERSION = '3.6';
+    const SCRIPT_VERSION = '3.7';
 
     function parseAmount(text) {
         if (!text) return 0;
@@ -62,14 +62,15 @@
                 }
                 
                 const text = container.textContent;
-                const match = text.match(/(\d+[.,]\d{2})\s*(EUR|€)/);
+                // match full German-format number with optional thousands separators (dot, space, NBSP)
+                const match = text.match(/(\d{1,3}(?:[\.\s\u00A0]\d{3})*,\d{2})\s*(EUR|€)/);
                 
                 if (match && text.length > 50 && text.length < 2000) {
                     // Mark as processed
                     seenElements.add(container);
                     rows.push({
                         text: text,
-                        amount: match[1],
+                        amount: match[1], // now the full German-format amount
                         element: container,
                         depth: depth
                     });
@@ -96,7 +97,8 @@
         
         rows.forEach((row, idx) => {
             const amount = parseAmount(row.amount);
-            if (amount > 0 && amount < 1000000) {
+                if (amount > 0 && amount < 1000000) {
+                console.log(`DEBUG: rawMatched="${row.amount}" -> parsed=${amount}`);
                 const dateMatch = row.text.match(/Ausf[^\d]*(\d{2}\.\d{2}\.\d{4})/);
                 const date = dateMatch ? dateMatch[1] : 'N/A';
                 const signature = `${amount.toFixed(2)}_${date}`;
