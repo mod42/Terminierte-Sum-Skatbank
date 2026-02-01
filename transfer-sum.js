@@ -16,6 +16,7 @@
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
     let containerInstance = null;
+    const SCRIPT_VERSION = '3.6';
 
     function parseAmount(text) {
         if (!text) return 0;
@@ -130,7 +131,7 @@
         
         const header = document.createElement('div');
         header.style.cssText = 'font-size: 14px; margin-bottom: 10px; font-weight: bold;';
-        header.textContent = `✓ Überweisungen Summe: ${total.toFixed(2)} € (${count} Transfers)`;
+        header.textContent = `✓ Überweisungen Summe: ${total.toFixed(2)} € (${count} Transfers) — v${SCRIPT_VERSION}`;
         container.appendChild(header);
         
         const list = document.createElement('div');
