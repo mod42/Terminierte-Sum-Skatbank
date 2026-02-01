@@ -111,7 +111,6 @@
 
     // Scan and update results
     function scanAndUpdate() {
-        scanAttempts++;
         const { total, transferCount, transfers } = sumTransfers();
 
         // Only update display if numbers changed
