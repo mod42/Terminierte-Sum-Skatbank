@@ -16,7 +16,7 @@
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
     let containerInstance = null;
-    const SCRIPT_VERSION = '3.8';
+    const SCRIPT_VERSION = '3.9';
 
     function parseAmount(text) {
         if (!text) return 0;
@@ -99,8 +99,29 @@
             const amount = parseAmount(row.amount);
                 if (amount > 0 && amount < 1000000) {
                 console.log(`DEBUG: rawMatched="${row.amount}" -> parsed=${amount}`);
-                const dateMatch = row.text.match(/Ausf[^\d]*(\d{2}\.\d{2}\.\d{4})/);
-                const date = dateMatch ? dateMatch[1] : 'N/A';
+                // Robust date extraction: try several fallbacks
+                function extractDateFromRow(row) {
+                    const text = row.text;
+                    // 1) explicit "Ausf...DD.MM.YYYY"
+                    let m = text.match(/Ausf[^\d]*(\d{2}\.\d{2}\.\d{4})/i);
+                    if (m) return m[1];
+                    // 2) any dd.MM.YYYY in the row
+                    m = text.match(/(\d{2}\.\d{2}\.\d{4})/);
+                    if (m) return m[1];
+                    // 3) walk up ancestors of the element and search their textContent
+                    let el = row.element;
+                    let depth = 0;
+                    while (el && depth < 6) {
+                        const t = el.textContent || '';
+                        m = t.match(/(\d{2}\.\d{2}\.\d{4})/);
+                        if (m) return m[1];
+                        el = el.parentElement;
+                        depth++;
+                    }
+                    // 4) fallback label
+                    return 'Unbekannt';
+                }
+                const date = extractDateFromRow(row);
                 const signature = `${amount.toFixed(2)}_${date}`;
                 
                 if (!uniqueTransfers.has(signature)) {
