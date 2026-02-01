@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sum Scheduled Transfers - Skatbank
 // @namespace    http://tampermonkey.net/
-// @version      3.7
+// @version      3.8
 // @description  Sum up all scheduled transfers on Skatbank portal (FIXED number parsing)
 // @author       You
 // @match        https://www.skatbank.de/services_cloud/portal/webcomp/auftraege/terminierte-ueberweisungen*
@@ -11,12 +11,12 @@
 
 (function() {
     'use strict';
-    console.log('🔍 Skatbank Transfer Summe Script v3.7 geladen!');
+    console.log('🔍 Skatbank Transfer Summe Script v3.8 geladen!');
 
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
     let containerInstance = null;
-    const SCRIPT_VERSION = '3.7';
+    const SCRIPT_VERSION = '3.8';
 
     function parseAmount(text) {
         if (!text) return 0;
@@ -136,15 +136,48 @@
         header.textContent = `✓ Überweisungen Summe: ${total.toFixed(2)} € (${count} Transfers) — v${SCRIPT_VERSION}`;
         container.appendChild(header);
         
-        const list = document.createElement('div');
-        list.style.cssText = 'font-size: 11px; max-height: 400px; overflow-y: auto;';
-        transfers.forEach((t, i) => {
-            const item = document.createElement('div');
-            item.style.cssText = 'margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 4px;';
-            item.textContent = `${i+1}. ${t.amount.toFixed(2)} € (${t.date})`;
-            list.appendChild(item);
+        // Create a compact bar chart showing sum per day (no transaction list)
+        const sums = new Map();
+        transfers.forEach(t => {
+            const key = t.date || 'N/A';
+            sums.set(key, (sums.get(key) || 0) + t.amount);
         });
-        container.appendChild(list);
+
+        // Sort dates (put 'N/A' at the end)
+        const entries = Array.from(sums.entries()).sort((a,b) => {
+            if (a[0] === 'N/A') return 1;
+            if (b[0] === 'N/A') return -1;
+            // dd.MM.yyyy -> yyyy-MM-dd for sorting
+            const pa = a[0].split('.');
+            const pb = b[0].split('.');
+            const da = `${pa[2]}-${pa[1]}-${pa[0]}`;
+            const db = `${pb[2]}-${pb[1]}-${pb[0]}`;
+            return da < db ? -1 : da > db ? 1 : 0;
+        });
+
+        const max = entries.reduce((m, e) => Math.max(m, e[1]), 0) || 1;
+        const chart = document.createElement('div');
+        chart.style.cssText = 'display:flex; gap:6px; align-items:flex-end; padding-top:8px;';
+
+        entries.forEach(([date, sum]) => {
+            const barWrap = document.createElement('div');
+            barWrap.style.cssText = 'display:flex; flex-direction:column; align-items:center; width:40px;';
+
+            const bar = document.createElement('div');
+            const height = Math.round((sum / max) * 160); // max 160px
+            bar.style.cssText = `width: 100%; height: ${height}px; background: rgba(255,255,255,0.85); border-radius:4px; transition:opacity .15s;`;
+            bar.title = `${date}: ${sum.toFixed(2)} €`;
+
+            const label = document.createElement('div');
+            label.style.cssText = 'font-size:10px; margin-top:6px; text-align:center; word-break:break-word;';
+            label.textContent = date === 'N/A' ? 'N/A' : date.replace(/(\d{2})\.(\d{2})\.\d{4}/, '$1.$2');
+
+            barWrap.appendChild(bar);
+            barWrap.appendChild(label);
+            chart.appendChild(barWrap);
+        });
+
+        container.appendChild(chart);
         
         document.body.appendChild(container);
         makeDraggable(container);
