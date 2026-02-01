@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Sum Scheduled Transfers - Skatbank
 // @namespace    http://tampermonkey.net/
-// @version      3.3
-// @description  Sum up all scheduled transfers on Skatbank portal (FIXED deduplication)
+// @version      3.4
+// @description  Sum up all scheduled transfers on Skatbank portal (FIXED number parsing)
 // @author       You
 // @match        https://www.skatbank.de/services_cloud/portal/webcomp/auftraege/terminierte-ueberweisungen*
 // @grant        none
@@ -11,7 +11,7 @@
 
 (function() {
     'use strict';
-    console.log('🔍 Skatbank Transfer Summe Script v3.3 geladen!');
+    console.log('🔍 Skatbank Transfer Summe Script v3.4 geladen!');
 
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
@@ -24,20 +24,11 @@
         if (!match) return 0;
         
         let numStr = match[0];
-        const lastComma = numStr.lastIndexOf(',');
-        const lastDot = numStr.lastIndexOf('.');
+        // German format: . = thousands, , = decimal
+        // Simply remove dots and replace comma with dot
+        numStr = numStr.replace(/\./g, '').replace(',', '.');
         
-        let amount = 0;
-        if (lastComma > lastDot) {
-            amount = parseFloat(numStr.replace(/\./g, '').replace(',', '.'));
-        } else if (lastDot > lastComma) {
-            amount = parseFloat(numStr.replace(/,/g, ''));
-        } else if (lastComma >= 0) {
-            amount = parseFloat(numStr.replace(',', '.'));
-        } else {
-            amount = parseFloat(numStr);
-        }
-        
+        const amount = parseFloat(numStr);
         return isNaN(amount) ? 0 : amount;
     }
 
