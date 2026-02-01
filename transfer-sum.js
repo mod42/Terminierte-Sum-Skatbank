@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sum Scheduled Transfers - Skatbank
 // @namespace    http://tampermonkey.net/
-// @version      4.2
+// @version      4.3
 // @description  Sum up all scheduled transfers on Skatbank portal (FIXED number parsing)
 // @author       You
 // @match        https://www.skatbank.de/services_cloud/portal/webcomp/auftraege/terminierte-ueberweisungen*
@@ -16,7 +16,7 @@
     let lastDisplayedTotal = null;
     let lastDisplayedCount = null;
     let containerInstance = null;
-    const SCRIPT_VERSION = '4.2';
+    const SCRIPT_VERSION = '4.3';
 
     function parseAmount(text) {
         if (!text) return 0;
@@ -138,6 +138,18 @@
     }
 
     function scanAndUpdate() {
+        // If user navigated away from the terminierte-ueberweisungen page, remove popup and stop
+        const onTransfersPage = /terminierte-ueberweisungen/i.test(window.location.href);
+        if (!onTransfersPage) {
+            lastDisplayedTotal = null;
+            lastDisplayedCount = null;
+            if (containerInstance) {
+                containerInstance.remove();
+                containerInstance = null;
+            }
+            return;
+        }
+
         const result = sumTransfers();
         // If no transfers found (e.g., user navigated away), remove popup
         if (result.count === 0) {
