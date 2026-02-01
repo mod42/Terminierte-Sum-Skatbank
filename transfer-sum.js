@@ -150,7 +150,7 @@
     function displayResults(total, count, transfers) {
         const container = document.createElement('div');
         container.id = 'transfer-sum-display';
-        container.style.cssText = `position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: Arial, sans-serif; z-index: 10000; min-width: 280px; max-height: 500px; overflow-y: auto; cursor: move;`;
+        container.style.cssText = `position: fixed; top: 15vh; right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: Arial, sans-serif; z-index: 10000; min-width: 280px; max-height: 500px; overflow-y: auto; cursor: move;`;
         
         const header = document.createElement('div');
         header.style.cssText = 'font-size: 14px; margin-bottom: 10px; font-weight: bold;';
